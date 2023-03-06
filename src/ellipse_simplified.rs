@@ -188,15 +188,37 @@ pub fn solve_2x2_linear_system(matrix_m: &nalgebra::Matrix2<f64>, vector_v: &Vec
     Some(p_solution)
 }
 
+/// Finds the best angle to align the points with the x-axis.
+/// It is assumed that the points are already centered around the origin.
+/// 
+/// This is not a perfect method but it is fast and it works well enough for
+/// out case. See below for more details.
+/// 
+/// # Method
+/// 
+/// This functions evaluates the ratio of the variance of the points along the
+/// x-axis and the y-axis. The best angle is the one that maximizes this ratio.
+/// 
+/// To find the best angle, we start with the $[-\\pi, \\pi]$ range and we divide
+/// it into `angle_subdivisions` sub-ranges. We then evaluate the ratio for each
+/// sub-range and we return the angle that maximizes the ratio.
 pub fn find_best_angle(pts: impl Iterator<Item=Vec2d> + Clone, angle_subdivisions: &[u32]) -> Result<f64, Box<dyn Error>> {
     if angle_subdivisions.is_empty() {
         return Err("angle_subdivisions is empty".into());
     }
 
-    if pts.clone().count() < 3 {
-        return Err("pts must have at least 2 points".into());
+    for subdivisions in angle_subdivisions {
+        if *subdivisions < 2 {
+            return Err("angle_subdivisions must be >= 2".into());
+        }
     }
 
+    if pts.clone().count() < 3 {
+        return Err("pts must have at least 3 points".into());
+    }
+
+    // Evaluates the ratio of the variance of the points along the x-axis and the y-axis for
+    // the given angle.
     let score_for_angle = |angle: f64| -> Result<f64, Box<dyn Error>> {
         let rotated_pts = pts.clone().map(|p| rotate_point(p, -angle));
         let (var_x, var_y) = compute_variance2(rotated_pts, Some(Vec2d::new(0.0, 0.0)));
@@ -209,6 +231,7 @@ pub fn find_best_angle(pts: impl Iterator<Item=Vec2d> + Clone, angle_subdivision
     };
 
     let mut range = (-std::f64::consts::PI / 2.0, std::f64::consts::PI / 2.0);
+
     for &subdivisions in angle_subdivisions {
         let step = (range.1 - range.0) / subdivisions as f64;
         let mut best_score = 0.0;
