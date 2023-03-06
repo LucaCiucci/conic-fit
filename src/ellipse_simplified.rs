@@ -167,8 +167,8 @@ pub fn fit_aligned_ellipse_axes(aligned_pts: impl Iterator<Item=Vec2d>) -> (f64,
 /// $$
 /// using Cramer's rule.
 /// 
-/// This function is a simplified version of [`nalgebra::SMatrix::solve`] that
-/// only works for 2x2 matrices, it is quite simple so it can be used as a
+/// This function is a simplified version of [`nalgebra::SMatrix::solve`].
+/// It only works for 2x2 matrices but it is quite simple so it can be used as a
 /// reference.
 pub fn solve_2x2_linear_system(matrix_m: &nalgebra::Matrix2<f64>, vector_v: &Vec2d) -> Option<Vec2d> {
     let det = matrix_m[(0, 0)] * matrix_m[(1, 1)] - matrix_m[(0, 1)] * matrix_m[(1, 0)];
